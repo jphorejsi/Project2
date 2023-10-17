@@ -61,6 +61,8 @@ Sphere ball = new Sphere(new Vec3(4.8, 5.5, 4.6), 0.3);
 PrintWriter output;
 Camera camera;
 
+PImage myTexture;
+
 //Collision detection
 boolean nodeSphereCollision(Node object1, Sphere object2) {
     if (object1.pos.distanceTo(object2.pos) <= object1.radius + object2.radius) {
@@ -150,6 +152,11 @@ void setup() {
   size(500, 500, P3D);
   surface.setTitle("Double Pendulum");
   scene_scale = width / 10.0f;
+  smooth();
+  ambientLight(50, 50, 50);
+  directionalLight(255, 255, 255, 1, -1, -0.5);
+  pointLight(250, 250, 250, width/2, height/2, 200);
+  myTexture = loadImage("texture.png");
 }
 
 void update_physics(float dt) {
@@ -261,6 +268,10 @@ void draw() {
       popMatrix(); 
     }
   }
+
+  ambient(127);
+  specular(255);
+  shininess(200);
   
   //draw ball
   fill(255, 0, 0);
@@ -270,20 +281,23 @@ void draw() {
   popMatrix();
   
   //draw lines
-  stroke(0);
-  strokeWeight(3);
-  //down
-  for(int x = 0; x < 4; x++){
-      for(int y = 0; y < 5; y++){
-        line(nodes[x+1][y].pos.x * scene_scale, nodes[x+1][y].pos.y * scene_scale, nodes[x+1][y].pos.z * scene_scale, nodes[x][y].pos.x * scene_scale, nodes[x][y].pos.y * scene_scale, nodes[x][y].pos.z * scene_scale);
+  textureMode(NORMAL);
+  beginShape(TRIANGLES);
+  texture(myTexture);
+  for (int x = 0; x < 4; x++) {
+      for (int y = 0; y < 4; y++) {
+          // Triangle 1
+          vertex(nodes[x][y].pos.x * scene_scale, nodes[x][y].pos.y * scene_scale, nodes[x][y].pos.z * scene_scale, (float)x / 4, (float)y / 4);
+          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (float)(x + 1) / 4, (float)y / 4);
+          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, (float)x / 4, (float)(y + 1) / 4);
+  
+          // Triangle 2
+          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (float)(x + 1) / 4, (float)y / 4);
+          vertex(nodes[x + 1][y + 1].pos.x * scene_scale, nodes[x + 1][y + 1].pos.y * scene_scale, nodes[x + 1][y + 1].pos.z * scene_scale, (float)(x + 1) / 4, (float)(y + 1) / 4);
+          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, (float)x / 4, (float)(y + 1) / 4);
       }
-    }
-  //across
-  for(int x = 0; x < 5; x++){
-      for(int y = 0; y < 4; y++){
-        line(nodes[x][y+1].pos.x * scene_scale, nodes[x][y+1].pos.y * scene_scale, nodes[x][y+1].pos.z * scene_scale, nodes[x][y].pos.x * scene_scale, nodes[x][y].pos.y * scene_scale, nodes[x][y].pos.z * scene_scale);
-      }
-    }  
+  }
+  endShape();
 }
 
 
