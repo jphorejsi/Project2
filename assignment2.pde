@@ -22,10 +22,11 @@ class Sphere {
   }
 }
 
-Vec3 wind = new Vec3(10, 0, 0); // Wind blowing from left to right with a magnitude of 5 units
-float k = 0.5; // Aggressiveness factor. Increase to make wind effect more aggressive
-float time_wind = 0; // Initialize this somewhere globally or in your class
-float billow_frequency = 0.5f; // Controls how fast the billowing effect happens
+//Wind vars
+Vec3 wind = new Vec3(10, 0, 0);
+float k = 0.5;
+float time_wind = 0;
+float billow_frequency = 0.5f;
 float billow_magnitude = 0.2f; 
 
 Sphere ball = new Sphere(new Vec3(4.8, 5.5, 4.6), 0.3);
