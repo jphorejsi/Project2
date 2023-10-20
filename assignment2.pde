@@ -3,7 +3,7 @@ class Node {
   Vec3 pos;
   Vec3 vel;
   Vec3 last_pos;
-  float radius = 0.01;
+  float radius = 0.0379;
 
   Node(Vec3 pos) {
     this.pos = pos;
@@ -21,6 +21,14 @@ class Sphere {
     this.radius = radius;
   }
 }
+
+Vec3 wind = new Vec3(10, 0, 0); // Wind blowing from left to right with a magnitude of 5 units
+float k = 0.5; // Aggressiveness factor. Increase to make wind effect more aggressive
+float time_wind = 0; // Initialize this somewhere globally or in your class
+float billow_frequency = 0.5f; // Controls how fast the billowing effect happens
+float billow_magnitude = 0.2f; 
+
+Sphere ball = new Sphere(new Vec3(4.8, 5.5, 4.6), 0.3);
 
 // Nodes
 Node base1 = new Node(new Vec3(5, 5, 5));
@@ -55,21 +63,11 @@ Node node20 = new Node(new Vec3(5.8, 5, 4.2));
 
 Node[][] nodes = new Node[5][5];
 
-//sphere
-Sphere ball = new Sphere(new Vec3(4.8, 5.5, 4.6), 0.3);
 
 PrintWriter output;
 Camera camera;
 
 PImage myTexture;
-
-//Collision detection
-boolean nodeSphereCollision(Node object1, Sphere object2) {
-    if (object1.pos.distanceTo(object2.pos) <= object1.radius + object2.radius) {
-        return true;
-    }
-    return false;
-}
 
 // Link length
 float link_length = 0.2;
@@ -110,9 +108,24 @@ Vec3 gravity = new Vec3(0, 10, 0);
 float scene_scale = width / 10.0f;
 
 // Physics Parameters
-int relaxation_steps = 100;
-int sub_steps = 1;
+int relaxation_steps = 1000;
+int sub_steps = 5;
 
+void resolveCollisionsWithSphere() {
+  for(int i = 0; i < 5; i++){
+    for(int j = 0; j < 5; j++){
+      Vec3 d = nodes[i][j].pos.minus(ball.pos);
+      float dist = d.length();
+
+      if(dist < ball.radius + nodes[i][j].radius) { 
+          // The node is inside the sphere
+          // Move the node to the surface of the sphere
+          Vec3 correction = d.normalized().times(ball.radius + nodes[i][j].radius - dist);
+          nodes[i][j].pos = nodes[i][j].pos.plus(correction);
+      }
+    }
+  }
+}
 
 void setup() {
   //camera(width/2.0 - 50, height/2.0, (height/2.0) / tan(PI*30.0 / 180.0) - 50, width/2.0, height/2.0, 0, 0, 1, 0);
@@ -160,29 +173,28 @@ void setup() {
 }
 
 void update_physics(float dt) {
-  // Semi-implicit Integration
+  time_wind += dt;
+  float modulated_wind_magnitude = 1.0f + billow_magnitude * (float)Math.sin(billow_frequency * time_wind);
+  Vec3 modulated_wind = wind.times(modulated_wind_magnitude);
   for(int i = 0; i < 5; i++){
     for(int j = 0; j < 5; j++){
+      // Apply wind drag based on node's velocity relative to the modulated wind
+      Vec3 relativeWind = modulated_wind.minus(nodes[i][j].vel);
+      Vec3 windForce = relativeWind.times(k);
+
+      // Combine forces (Gravity and Wind)
+      Vec3 totalForce = gravity.plus(windForce);
+
+      // Update velocities
+      nodes[i][j].vel = nodes[i][j].vel.plus(totalForce.times(dt));
+
+      // Update positions
       nodes[i][j].last_pos = nodes[i][j].pos;
-      nodes[i][j].vel = nodes[i][j].vel.plus(gravity.times(dt));
       nodes[i][j].pos = nodes[i][j].pos.plus(nodes[i][j].vel.times(dt));
-    }  
-  }
-  
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
-      if(nodeSphereCollision(nodes[i][j], ball)){
-        // Move balls out of collision
-        //float overlap = 0.5f * (dist - balls[i].radius - balls[j].radius);
-        //balls[i].pos.subtract(delta.normalized().times(overlap));
-        //balls[j].pos.add(delta.normalized().times(overlap));
-        Vec3 delta = nodes[i][j].pos.minus(ball.pos);
-        float dist = delta.length();
-        float overlap = (dist - nodes[i][j].radius - ball.radius);
-        nodes[i][j].pos.subtract(delta.normalized().times(overlap));
-      }
     }
   }
+  
+  resolveCollisionsWithSphere();
   
   // Constrain the distance between nodes to the link length
   for (int i = 0; i < relaxation_steps; i++) {
@@ -264,7 +276,7 @@ void draw() {
     for(int j = 0; j < 5; j++){
       pushMatrix();
       translate(nodes[i][j].pos.x * scene_scale, nodes[i][j].pos.y * scene_scale, nodes[i][j].pos.z * scene_scale);
-      sphere(nodes[i][j].radius * scene_scale);
+      //sphere(nodes[i][j].radius * scene_scale);
       popMatrix(); 
     }
   }
@@ -273,13 +285,12 @@ void draw() {
   specular(255);
   shininess(200);
   
-  //draw ball
   fill(255, 0, 0);
   pushMatrix();
   translate(ball.pos.x * scene_scale, ball.pos.y * scene_scale, ball.pos.z * scene_scale);
   sphere(ball.radius * scene_scale);
   popMatrix();
-  
+
   //draw lines
   textureMode(NORMAL);
   beginShape(TRIANGLES);
@@ -382,6 +393,3 @@ public class Vec3 {
     z -= rhs.z;
   }
 }
-  
-  
-  
