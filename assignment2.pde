@@ -23,46 +23,18 @@ class Sphere {
 }
 
 //Wind vars
-Vec3 wind = new Vec3(10, 0, 0);
+Vec3 wind = new Vec3(8, 0, 0);
 float k = 0.5;
 float time_wind = 0;
 float billow_frequency = 0.5f;
-float billow_magnitude = 0.2f; 
+float billow_magnitude = 0.2f;
+
+int totalNodes = 20;
 
 Sphere ball = new Sphere(new Vec3(4.8, 5.5, 4.6), 0.3);
 
-// Nodes
-Node base1 = new Node(new Vec3(5, 5, 5));
-Node base2 = new Node(new Vec3(5, 5, 4.8));
-Node base3 = new Node(new Vec3(5, 5, 4.6));
-Node base4 = new Node(new Vec3(5, 5, 4.4));
-Node base5 = new Node(new Vec3(5, 5, 4.2));
 
-Node node1 = new Node(new Vec3(5.2, 5, 5));
-Node node2 = new Node(new Vec3(5.2, 5, 4.8));
-Node node3 = new Node(new Vec3(5.2, 5, 4.6));
-Node node4 = new Node(new Vec3(5.2, 5, 4.4));
-Node node5 = new Node(new Vec3(5.2, 5, 4.2));
-
-Node node6 = new Node(new Vec3(5.4, 5, 5));
-Node node7 = new Node(new Vec3(5.4, 5, 4.8));
-Node node8 = new Node(new Vec3(5.4, 5, 4.6));
-Node node9 = new Node(new Vec3(5.4, 5, 4.4));
-Node node10 = new Node(new Vec3(5.4, 5, 4.2));
-
-Node node11 = new Node(new Vec3(5.6, 5, 5));
-Node node12 = new Node(new Vec3(5.6, 5, 4.8));
-Node node13 = new Node(new Vec3(5.6, 5, 4.6));
-Node node14 = new Node(new Vec3(5.6, 5, 4.4));
-Node node15 = new Node(new Vec3(5.6, 5, 4.2));
-
-Node node16 = new Node(new Vec3(5.8, 5, 5));
-Node node17 = new Node(new Vec3(5.8, 5, 4.8));
-Node node18 = new Node(new Vec3(5.8, 5, 4.6));
-Node node19 = new Node(new Vec3(5.8, 5, 4.4));
-Node node20 = new Node(new Vec3(5.8, 5, 4.2));
-
-Node[][] nodes = new Node[5][5];
+Node[][] nodes = new Node[totalNodes][totalNodes];
 
 
 PrintWriter output;
@@ -71,19 +43,19 @@ Camera camera;
 PImage myTexture;
 
 // Link length
-float link_length = 0.2;
+float link_length = 0.05;
 
 float total_length_error(){
   //down
   float sum = 0;
-  for(int x = 0; x < 4; x++){
-    for(int y = 0; y < 5; y++){
+  for(int x = 0; x < totalNodes-1; x++){
+    for(int y = 0; y < totalNodes; y++){
       sum += nodes[x+1][y].pos.distanceTo(nodes[x][y].pos);
      }
   }
   //across
-  for(int x = 0; x < 5; x++){
-    for(int y = 0; y < 4; y++){
+  for(int x = 0; x < totalNodes; x++){
+    for(int y = 0; y < totalNodes-1; y++){
       sum += nodes[x][y+1].pos.distanceTo(nodes[x][y].pos);
     }
   }
@@ -93,8 +65,8 @@ float total_length_error(){
 float total_energy(){
   float kinetic = 0;
   float potential = 0;
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
+  for(int i = 0; i < totalNodes; i++){
+    for(int j = 0; j < totalNodes; j++){
       kinetic += 0.5 * nodes[i][j].vel.lengthSqr();
       potential += gravity.y * ((height - nodes[i][j].pos.y * scene_scale) / scene_scale);
     }
@@ -109,12 +81,12 @@ Vec3 gravity = new Vec3(0, 10, 0);
 float scene_scale = width / 10.0f;
 
 // Physics Parameters
-int relaxation_steps = 1000;
-int sub_steps = 5;
+int relaxation_steps = 230;
+int sub_steps = 10;
 
 void resolveCollisionsWithSphere() {
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
+  for(int i = 0; i < totalNodes; i++){
+    for(int j = 0; j < totalNodes; j++){
       Vec3 d = nodes[i][j].pos.minus(ball.pos);
       float dist = d.length();
 
@@ -131,35 +103,11 @@ void resolveCollisionsWithSphere() {
 void setup() {
   //camera(width/2.0 - 50, height/2.0, (height/2.0) / tan(PI*30.0 / 180.0) - 50, width/2.0, height/2.0, 0, 0, 1, 0);
   camera = new Camera();
-  nodes[0][0] = base1;
-  nodes[0][1] = base2;
-  nodes[0][2] = base3;
-  nodes[0][3] = base4;
-  nodes[0][4] = base5;
-
-  nodes[1][0] = node1;
-  nodes[1][1] = node2;
-  nodes[1][2] = node3;
-  nodes[1][3] = node4;
-  nodes[1][4] = node5;
-
-  nodes[2][0] = node6;
-  nodes[2][1] = node7;
-  nodes[2][2] = node8;
-  nodes[2][3] = node9;
-  nodes[2][4] = node10;
-
-  nodes[3][0] = node11;
-  nodes[3][1] = node12;
-  nodes[3][2] = node13;
-  nodes[3][3] = node14;
-  nodes[3][4] = node15;
-
-  nodes[4][0] = node16;
-  nodes[4][1] = node17;
-  nodes[4][2] = node18;
-  nodes[4][3] = node19;
-  nodes[4][4] = node20;
+  for (int i = 0; i < totalNodes; i++) {
+    for (int j = 0; j < totalNodes; j++) {
+        nodes[i][j] = new Node(new Vec3(4.8 + (i * link_length), 5, 5.1 - (j * link_length)));
+    }
+  }
 
   
   output = createWriter("positions.txt"); 
@@ -177,8 +125,8 @@ void update_physics(float dt) {
   time_wind += dt;
   float modulated_wind_magnitude = 1.0f + billow_magnitude * (float)Math.sin(billow_frequency * time_wind);
   Vec3 modulated_wind = wind.times(modulated_wind_magnitude);
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
+  for(int i = 0; i < totalNodes; i++){
+    for(int j = 0; j < totalNodes; j++){
       // Apply wind drag based on node's velocity relative to the modulated wind
       Vec3 relativeWind = modulated_wind.minus(nodes[i][j].vel);
       Vec3 windForce = relativeWind.times(k);
@@ -200,8 +148,8 @@ void update_physics(float dt) {
   // Constrain the distance between nodes to the link length
   for (int i = 0; i < relaxation_steps; i++) {
     //down
-    for(int x = 0; x < 4; x++){
-      for(int y = 0; y < 5; y++){
+    for(int x = 0; x < totalNodes-1; x++){
+      for(int y = 0; y < totalNodes; y++){
         Vec3 delta = nodes[x+1][y].pos.minus(nodes[x][y].pos);
         float delta_len = delta.length();
         float correction = (delta_len - link_length) *.1;
@@ -211,8 +159,8 @@ void update_physics(float dt) {
       }
     }
     //across
-    for(int x = 0; x < 5; x++){
-      for(int y = 0; y < 4; y++){
+    for(int x = 0; x < totalNodes; x++){
+      for(int y = 0; y < totalNodes-1; y++){
         Vec3 delta = nodes[x][y+1].pos.minus(nodes[x][y].pos);
         float delta_len = delta.length();
         float correction = delta_len - link_length;
@@ -222,16 +170,14 @@ void update_physics(float dt) {
       }
     }
     
-    base1.pos = new Vec3(5, 5, 5); // Fix the base nodes in place
-    base2.pos = new Vec3(5, 5, 4.8);
-    base3.pos = new Vec3(5, 5, 4.6);
-    base4.pos = new Vec3(5, 5, 4.4);
-    base5.pos = new Vec3(5, 5, 4.2);
+    for (int x = 0; x < totalNodes; x++) {
+      nodes[0][x].pos = new Vec3(4.8, 5, 5.1 - (x * link_length));
+    }
   }
 
   // Update the velocities (PBD)
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
+  for(int i = 0; i < totalNodes; i++){
+    for(int j = 0; j < totalNodes; j++){
       nodes[i][j].vel = nodes[i][j].pos.minus(nodes[i][j].last_pos).times(1 / dt);
     }
   }
@@ -272,9 +218,9 @@ void draw() {
   fill(0, 255, 0);
   noStroke();
   lights();
-  strokeWeight(0.02 * scene_scale);
-  for(int i = 0; i < 5; i++){
-    for(int j = 0; j < 5; j++){
+  strokeWeight(link_length * scene_scale); //HERE
+  for(int i = 0; i < totalNodes; i++){
+    for(int j = 0; j < totalNodes; j++){
       pushMatrix();
       translate(nodes[i][j].pos.x * scene_scale, nodes[i][j].pos.y * scene_scale, nodes[i][j].pos.z * scene_scale);
       //sphere(nodes[i][j].radius * scene_scale);
@@ -296,17 +242,19 @@ void draw() {
   textureMode(NORMAL);
   beginShape(TRIANGLES);
   texture(myTexture);
-  for (int x = 0; x < 4; x++) {
-      for (int y = 0; y < 4; y++) {
+  float textureStepX = 1.0 / (totalNodes - 1);
+  float textureStepY = 1.0 / (totalNodes - 1);
+  for (int x = 0; x < totalNodes-1; x++) {
+      for (int y = 0; y < totalNodes-1; y++) {
           // Triangle 1
-          vertex(nodes[x][y].pos.x * scene_scale, nodes[x][y].pos.y * scene_scale, nodes[x][y].pos.z * scene_scale, (float)x / 4, (float)y / 4);
-          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (float)(x + 1) / 4, (float)y / 4);
-          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, (float)x / 4, (float)(y + 1) / 4);
+          vertex(nodes[x][y].pos.x * scene_scale, nodes[x][y].pos.y * scene_scale, nodes[x][y].pos.z * scene_scale, x * textureStepX, y * textureStepY);
+          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (x + 1) * textureStepX, y * textureStepY);
+          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, x * textureStepX, (y + 1) * textureStepY);
   
           // Triangle 2
-          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (float)(x + 1) / 4, (float)y / 4);
-          vertex(nodes[x + 1][y + 1].pos.x * scene_scale, nodes[x + 1][y + 1].pos.y * scene_scale, nodes[x + 1][y + 1].pos.z * scene_scale, (float)(x + 1) / 4, (float)(y + 1) / 4);
-          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, (float)x / 4, (float)(y + 1) / 4);
+          vertex(nodes[x + 1][y].pos.x * scene_scale, nodes[x + 1][y].pos.y * scene_scale, nodes[x + 1][y].pos.z * scene_scale, (x + 1) * textureStepX, y * textureStepY);
+          vertex(nodes[x + 1][y + 1].pos.x * scene_scale, nodes[x + 1][y + 1].pos.y * scene_scale, nodes[x + 1][y + 1].pos.z * scene_scale, (x + 1) * textureStepX, (y + 1) * textureStepY);
+          vertex(nodes[x][y + 1].pos.x * scene_scale, nodes[x][y + 1].pos.y * scene_scale, nodes[x][y + 1].pos.z * scene_scale, x * textureStepX, (y + 1) * textureStepY);
       }
   }
   endShape();
